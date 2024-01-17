@@ -1,0 +1,16 @@
+version: "5"
+services:
+  rabbitmq:
+    image: rabbitmq:3.12.11-management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=terrence
+      - RABBITMQ_DEFAULT_PASS=123456789
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - local-diskie-net
+networks:
+  local-diskie-net:
+    external: true
