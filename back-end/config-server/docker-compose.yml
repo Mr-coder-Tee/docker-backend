@@ -1,0 +1,15 @@
+version: "5"
+services:
+  configserver:
+    build: .
+    restart: always
+    ports:
+      - ${CONTAINER_PORT}:${CONTAINER_PORT}
+    container_name: ${CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+networks:
+  local-diskie-net:
+    external: true
+
+#todo add volume
