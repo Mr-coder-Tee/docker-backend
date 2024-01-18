@@ -6,6 +6,6 @@ step 2: once docker is properly installed create a network by opening CMD or git
 step 1: go inside the individual folders inside folder DBs.
 step 2: for each folder with a file named docker-compose run the command 'docker-compose up -d' using cmd.
 step 3: repeat step 2 for all other folders like (Drivers)
-step 4: repeat step 2 for back-end folder but running 'discover-server' first.
+step 4: repeat step 2 for back-end folder but with command 'docker-compose up --build -d' (running 'discover-server' first).
 
 
