@@ -1,0 +1,2 @@
+#######Create a network for the enviroment##########
+https://docs.docker.com/engine/reference/commandline/network_create/

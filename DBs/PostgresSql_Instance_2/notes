@@ -1,0 +1,5 @@
+-check container ip-address
+docker inspect postgres_db
+
+apt-get update -y
+apt-get install -y iputils-ping
