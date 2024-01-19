@@ -2,7 +2,7 @@ FROM openjdk:17
 WORKDIR /app
 COPY *.jar app.jar
 ENV TZ=Africa/Johannesburg
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=test","-jar","app.jar"]
 
 
 
