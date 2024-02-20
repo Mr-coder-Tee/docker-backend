@@ -1,0 +1,13 @@
+version: "5"
+services:
+  smsservice:
+    build: .
+    restart: always
+    container_name: ${CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+networks:
+  local-diskie-net:
+    external: true
+
+#todo add volume
