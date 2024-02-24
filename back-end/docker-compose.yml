@@ -1,0 +1,109 @@
+
+version: "5"
+services:
+  gatewayapi:
+    build: ./api-gateway
+    restart: always
+    ports:
+      - ${APIGATEWAY_CONTAINER_PORT}:${APIGATEWAY_CONTAINER_PORT}
+    container_name: ${APIGATEWAY_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  configserver:
+    build: ./config-server
+    restart: always
+    ports:
+      - ${CONFIG_CONTAINER_PORT}:${CONFIG_CONTAINER_PORT}
+    container_name: ${CONFIG_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+  discoveryserver:
+    build: ./discover-server
+    restart: always
+    ports:
+      - ${DISCOVER_CONTAINER_PORT}:${DISCOVER_CONTAINER_PORT}
+    container_name: ${DISCOVER_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+  emailservice:
+    build: ./emailService
+    restart: always
+    container_name: ${EMAIL_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  gameservice:
+    build: ./gameService
+    restart: always
+    container_name: ${GAME_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  livegameservice:
+    build: ./livegameService
+    restart: always
+    container_name: ${LIVE_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  notificationservice:
+    build: ./notificationService
+    restart: always
+    container_name: ${NOTIF_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  postservice:
+    build: ./postService
+    restart: always
+    container_name: ${POST_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  smsservice:
+    build: ./smsService
+    restart: always
+    container_name: ${SMS_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  uploadservice:
+    build: ./uploadService
+    restart: always
+    container_name: ${UPLOAD_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+  userservice:
+    build: ./userService
+    restart: always
+    container_name: ${USER_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+networks:
+  local-diskie-net:
+    external: true
+
+#todo add volume

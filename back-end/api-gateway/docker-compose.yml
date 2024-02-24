@@ -4,8 +4,8 @@ services:
     build: .
     restart: always
     ports:
-      - ${CONTAINER_PORT}:${CONTAINER_PORT}
-    container_name: ${CONTAINER_NAME}
+      - ${APIGATEWAY_CONTAINER_PORT}:${APIGATEWAY_CONTAINER_PORT}
+    container_name: ${APIGATEWAY_CONTAINER_NAME}
     networks:
       - local-diskie-net
 networks:

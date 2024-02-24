@@ -1,11 +1,11 @@
 version: "5"
 services:
-    livegameservice:
+  livegameservice:
     build: .
     restart: always
     ports:
-      - ${CONTAINER_PORT}:${CONTAINER_PORT}
-    container_name: ${CONTAINER_NAME}
+      - ${LIVE_CONTAINER_PORT}:${LIVE_CONTAINER_PORT}
+    container_name: ${LIVE_CONTAINER_NAME}
     networks:
       - local-diskie-net
 networks:

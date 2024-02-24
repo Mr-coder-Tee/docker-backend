@@ -3,7 +3,7 @@ services:
   postservice:
     build: .
     restart: always
-    container_name: ${CONTAINER_NAME}
+    container_name: ${POST_CONTAINER_NAME}
     networks:
       - local-diskie-net
 networks:
