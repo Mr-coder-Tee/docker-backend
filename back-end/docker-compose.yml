@@ -1,8 +1,103 @@
-
 version: "5"
 services:
+
+  rabbitmq:
+    image: rabbitmq:3.12.11-management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=terrence
+      - RABBITMQ_DEFAULT_PASS=123456789
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - local-diskie-net
+
+  localdiskie:
+    image: mongo:latest
+    container_name: local-diskie-db
+    ports:
+      - 27017:27017
+    networks:
+      - local-diskie-net
+    volumes:
+      - mongo-data:/data/db
+
+  postgressDb:
+    restart: always
+    image: postgres:latest
+    container_name: ${CONTAINER_NAME}
+    build: .
+    ports:
+      - ${LOCAL_PORTS}:${POSTGRESSDB_PORTS}
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: ${PGDATA}
+    volumes:
+      - postgress-data:/var/lib/postgresql/data
+    networks:
+      -  local-diskie-net
+
+  postgressDbNotification:
+    restart: always
+    image: postgres:latest
+    container_name: ${CONTAINER_NAME_NOTIF}
+    build: .
+    ports:
+      - ${LOCAL_PORTS_NOTIF}:${POSTGRESSDB_PORTS_NOTIF}
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_NOTIF}
+      POSTGRES_USER: ${POSTGRES_USER_NOTIF}
+      POSTGRES_DB: ${POSTGRES_DB_NOTIF}
+      PGDATA: ${PGDATA_NOTIF}
+    volumes:
+      - postgress-data:/var/lib/postgresql/data
+    networks:
+      -  local-diskie-net
+
+  postgressDbGame:
+    restart: always
+    image: postgres:latest
+    container_name: ${CONTAINER_NAME_GAME}
+    build: .
+    ports:
+      - ${LOCAL_PORTS_GAME}:${POSTGRESSDB_PORTS_GAME}
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_GAME}
+      POSTGRES_USER: ${POSTGRES_USER_GAME}
+      POSTGRES_DB: ${POSTGRES_DB_GAME}
+      PGDATA: ${PGDATA_GAME}
+    volumes:
+      - postgress-data:/var/lib/postgresql/data
+    networks:
+      -  local-diskie-net
+
+  configserver:
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/config-server:latest
+    restart: always
+    ports:
+      - ${CONFIG_CONTAINER_PORT}:${CONFIG_CONTAINER_PORT}
+    container_name: ${CONFIG_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - rabbitmq
+
+  discoveryserver:
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/discovery-server:latest
+    restart: always
+    ports:
+      - ${DISCOVER_CONTAINER_PORT}:${DISCOVER_CONTAINER_PORT}
+    container_name: ${DISCOVER_CONTAINER_NAME}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+
   gatewayapi:
-    build: ./api-gateway
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/api-gateway:latest
     restart: always
     ports:
       - ${APIGATEWAY_CONTAINER_PORT}:${APIGATEWAY_CONTAINER_PORT}
@@ -12,98 +107,151 @@ services:
     depends_on:
       - configserver
       - discoveryserver
-  configserver:
-    build: ./config-server
-    restart: always
-    ports:
-      - ${CONFIG_CONTAINER_PORT}:${CONFIG_CONTAINER_PORT}
-    container_name: ${CONFIG_CONTAINER_NAME}
-    networks:
-      - local-diskie-net
-  discoveryserver:
-    build: ./discover-server
-    restart: always
-    ports:
-      - ${DISCOVER_CONTAINER_PORT}:${DISCOVER_CONTAINER_PORT}
-    container_name: ${DISCOVER_CONTAINER_NAME}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
+
+
   emailservice:
-    build: ./emailService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/email-service:latest
     restart: always
     container_name: ${EMAIL_CONTAINER_NAME}
+    ports:
+      - ${EMAIL_CONTAINER_PORT}:${EMAIL_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+
+
   gameservice:
-    build: ./gameService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/game-service:latest
     restart: always
     container_name: ${GAME_CONTAINER_NAME}
+    ports:
+      - ${GAME_CONTAINER_PORT}:${GAME_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+      - postgressDbGame
+
+
   livegameservice:
-    build: ./livegameService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/live-game-service:latest
     restart: always
     container_name: ${LIVE_CONTAINER_NAME}
+    ports:
+      - ${LIVE_CONTAINER_PORT}:${LIVE_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+      - postgressDbNotification
+
+
   notificationservice:
-    build: ./notificationService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/notifications-service:latest
     restart: always
     container_name: ${NOTIF_CONTAINER_NAME}
+    ports:
+      - ${NOTIF_CONTAINER_PORT}:${NOTIF_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+      - postgressDbNotification
+
+
   postservice:
-    build: ./postService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/post-service:latest
     restart: always
     container_name: ${POST_CONTAINER_NAME}
+    ports:
+      - ${POST_CONTAINER_PORT}:${POST_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+      - postgres_db_posts
+
+
   smsservice:
-    build: ./smsService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/sms-service:latest
     restart: always
     container_name: ${SMS_CONTAINER_NAME}
+    ports:
+      - ${SMS_CONTAINER_PORT}:${SMS_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+
+
   uploadservice:
-    build: ./uploadService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/upload-service:latest
     restart: always
     container_name: ${UPLOAD_CONTAINER_NAME}
+    ports:
+      - ${UPLOAD_CONTAINER_PORT}:${UPLOAD_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+
+
   userservice:
-    build: ./userService
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/user-service:latest
     restart: always
     container_name: ${USER_CONTAINER_NAME}
+    ports:
+      - ${USER_CONTAINER_PORT}:${USER_CONTAINER_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
+      - local-diskie-db
+
+
+  userReactiveservice:
+    image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/user-reactive-service:latest
+    restart: always
+    container_name: ${USER_REACTIVE_CONTAINER_NAME}
+    ports:
+      - ${USER_REACTIVE_CONTAINER_PORT}:${USER_REACTIVE_CONTAINER_PORT}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+      - local-diskie-db
+  pg-admin:
+    restart: always
+    image: dpage/pgadmin4:latest
+    container_name: ${CONTAINER_NAME}
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_PORT: ${PGADMIN_LISTEN_PORT}
+    ports:
+      - ${LOCAL_PORT}:${PG_ADMIN_PORT}
+    volumes:
+      - pg-admin-data:/var/lib/pgadmin1
+    networks:
+      -  local-diskie-net
+
 networks:
   local-diskie-net:
     external: true
+
+volumes:
+  mongo-data:
+    driver: local
+  postgress-data:
 
 #todo add volume

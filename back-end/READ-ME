@@ -1,0 +1,3 @@
+make sure docker is installed and run the below in the docker-compose.yml directory
+
+1. run : docker-compose up -d
