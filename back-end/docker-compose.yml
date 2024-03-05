@@ -3,7 +3,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.12.11-management
-    container_name: rabbitmq
+    container_name: ${RABIT_MQ_CONTAINER_NAME}
     environment:
       - RABBITMQ_DEFAULT_USER=terrence
       - RABBITMQ_DEFAULT_PASS=123456789
@@ -15,7 +15,7 @@ services:
 
   localdiskie:
     image: mongo:latest
-    container_name: local-diskie-db
+    container_name: ${MONGO_CONTAINER_NAME}
     ports:
       - 27017:27017
     networks:
@@ -83,7 +83,7 @@ services:
     networks:
       - local-diskie-net
     depends_on:
-      - rabbitmq
+      - ${RABIT_MQ_CONTAINER_NAME}
 
   discoveryserver:
     image: 654654161149.dkr.ecr.af-south-1.amazonaws.com/discovery-server:latest
@@ -215,7 +215,7 @@ services:
     depends_on:
       - configserver
       - discoveryserver
-      - local-diskie-db
+      - ${MONGO_CONTAINER_NAME}
 
 
   userReactiveservice:
@@ -229,21 +229,7 @@ services:
     depends_on:
       - configserver
       - discoveryserver
-      - local-diskie-db
-  pg-admin:
-    restart: always
-    image: dpage/pgadmin4:latest
-    container_name: ${CONTAINER_NAME}
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-      PGADMIN_LISTEN_PORT: ${PGADMIN_LISTEN_PORT}
-    ports:
-      - ${LOCAL_PORT}:${PG_ADMIN_PORT}
-    volumes:
-      - pg-admin-data:/var/lib/pgadmin1
-    networks:
-      -  local-diskie-net
+      - ${MONGO_CONTAINER_NAME}
 
 networks:
   local-diskie-net:
