@@ -1,4 +1,0 @@
-#######Create a network for the enviroment##########
-https://docs.docker.com/engine/reference/commandline/network_create/
-
-docker network create --driver bridge networkName

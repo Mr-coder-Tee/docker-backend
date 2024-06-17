@@ -36,7 +36,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       PGDATA: ${PGDATA}
     volumes:
-      - postgress-data:/var/lib/postgresql/data
+      - postgress-post-data:/var/lib/postgresql/data
     networks:
       -  local-diskie-net
 
@@ -53,7 +53,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB_NOTIF}
       PGDATA: ${PGDATA_NOTIF}
     volumes:
-      - postgress-data:/var/lib/postgresql/data
+      - postgress-notification-data:/var/lib/postgresql/data
     networks:
       -  local-diskie-net
 
@@ -70,106 +70,62 @@ services:
       POSTGRES_DB: ${POSTGRES_DB_GAME}
       PGDATA: ${PGDATA_GAME}
     volumes:
-      - postgress-data:/var/lib/postgresql/data
+      - postgress-game-data:/var/lib/postgresql/data
     networks:
       -  local-diskie-net
 
   configserver:
-    image: public.ecr.aws/y9a7a6m7/config-server:latest
-    restart: always
+    image: terrencedroppa/local-diskie-config-server:latest
+    restart: unless-stopped
     ports:
-      - ${CONFIG_CONTAINER_PORT}:${CONFIG_CONTAINER_PORT}
+      - ${CONFIG_CONTAINER_PORT}:${CONFIG_APP_PORT}
     container_name: ${CONFIG_CONTAINER_NAME}
+    environment:
+      - ACTIVE_PROFILE=${CONFIG_PROFILE}
+      - EXPOSE_PORT=${CONFIG_APP_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - ${RABIT_MQ_CONTAINER_NAME}
 
   discoveryserver:
-    image: public.ecr.aws/y9a7a6m7/discovery-server:latest
-    restart: always
+    image: terrencedroppa/local-diskie-discovery-server:latest
+    restart: unless-stopped
     ports:
-      - ${DISCOVER_CONTAINER_PORT}:${DISCOVER_CONTAINER_PORT}
+      - ${DISCOVER_CONTAINER_PORT}:${DISCOVER_APP_PORT}
     container_name: ${DISCOVER_CONTAINER_NAME}
+    environment:
+      - ACTIVE_PROFILE=${DISCOVER_PROFILE}
+      - EXPOSE_PORT=${DISCOVER_APP_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
 
   gatewayapi:
-    image: public.ecr.aws/y9a7a6m7/api-gateway:latest
-    restart: always
+    image: terrencedroppa/local-diskie-api-gateway:latest
+    restart: unless-stopped
     ports:
-      - ${APIGATEWAY_CONTAINER_PORT}:${APIGATEWAY_CONTAINER_PORT}
+      - ${APIGATEWAY_CONTAINER_PORT}:${APIGATEWAY_APP_PORT}
     container_name: ${APIGATEWAY_CONTAINER_NAME}
+    environment:
+      - ACTIVE_PROFILE=${APIGATEWAY_PROFILE}
+      - EXPOSE_PORT=${APIGATEWAY_APP_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
-
-
-  emailservice:
-    image: public.ecr.aws/y9a7a6m7/email-service:latest
-    restart: always
-    container_name: ${EMAIL_CONTAINER_NAME}
-    ports:
-      - ${EMAIL_CONTAINER_PORT}:${EMAIL_CONTAINER_PORT}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
-      - discoveryserver
-
-
-  gameservice:
-    image: public.ecr.aws/y9a7a6m7/game-service:latest
-    restart: always
-    container_name: ${GAME_CONTAINER_NAME}
-    ports:
-      - ${GAME_CONTAINER_PORT}:${GAME_CONTAINER_PORT}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
-      - discoveryserver
-      - postgressDbGame
-
-
-  livegameservice:
-    image: public.ecr.aws/y9a7a6m7/live-game-service:latest
-    restart: always
-    container_name: ${LIVE_CONTAINER_NAME}
-    ports:
-      - ${LIVE_CONTAINER_PORT}:${LIVE_CONTAINER_PORT}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
-      - discoveryserver
-      - postgressDbNotification
-
-
-  notificationservice:
-    image: public.ecr.aws/y9a7a6m7/notifications-service:latest
-    restart: always
-    container_name: ${NOTIF_CONTAINER_NAME}
-    ports:
-      - ${NOTIF_CONTAINER_PORT}:${NOTIF_CONTAINER_PORT}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
-      - discoveryserver
-      - postgressDbNotification
-
 
   postservice:
-    image: public.ecr.aws/y9a7a6m7/post-service:latest
-    restart: always
+    image: terrencedroppa/local-diskie-posts-service:latest
+    restart: unless-stopped
     container_name: ${POST_CONTAINER_NAME}
     ports:
-      - ${POST_CONTAINER_PORT}:${POST_CONTAINER_PORT}
+      - ${POST_CONTAINER_PORT}:${POST_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${POST_PROFILE}
+      - EXPOSE_PORT=${POST_APP_PORT}
     networks:
       - local-diskie-net
     depends_on:
@@ -177,59 +133,130 @@ services:
       - discoveryserver
       - postgressDb
 
+  gameservice:
+    image: terrencedroppa/local-diskie-games-service:0.0.3
+    restart: unless-stopped
+    container_name: ${GAME_CONTAINER_NAME}
+    ports:
+      - ${GAME_CONTAINER_PORT}:${GAME_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${GAME_PROFILE}
+      - EXPOSE_PORT=${GAME_APP_PORT}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+      - postgressDbGame
+
+  livegameservice:
+    image: terrencedroppa/local-diskie-livegame-service:latest
+    restart: unless-stopped
+    container_name: ${LIVE_CONTAINER_NAME}
+    ports:
+      - ${LIVE_CONTAINER_PORT}:${LIVE_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${LIVE_PROFILE}
+      - EXPOSE_PORT=${LIVE_APP_PORT}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+      - postgressDbNotification
+
+  
+  userservice:
+    image: terrencedroppa/local-diskie-user-service:latest
+    restart: unless-stopped
+    container_name: ${USER_CONTAINER_NAME}
+    ports:
+      - ${USER_CONTAINER_PORT}:${USER_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${USER_PROFILE}
+      - EXPOSE_PORT=${USER_APP_PORT}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+      - localdiskie
+
+  userReactiveservice:
+    image: terrencedroppa/local-diskie-user-reactive-service:latest
+    restart: unless-stopped
+    container_name: ${USER_REACTIVE_CONTAINER_NAME}
+    ports:
+      - ${USER_REACTIVE_CONTAINER_PORT}:${USER_REACTIVE_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${USER_REACTIVE__PROFILE}
+      - EXPOSE_PORT=${USER_REACTIVE_APP_PORT}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+      - localdiskie
+
+  notificationservice:
+    image: terrencedroppa/local-diskie-notification-service:latest
+    restart: unless-stopped
+    container_name: ${NOTIF_CONTAINER_NAME}
+    ports:
+      - ${NOTIF_CONTAINER_PORT}:${NOTIF_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${NOTIF_PROFILE}
+      - EXPOSE_PORT=${NOTIF_APP_PORT}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
+      - postgressDbNotification
+
+  uploadservice:
+    image: terrencedroppa/local-diskie-upload-service:latest
+    restart: unless-stopped
+    container_name: ${UPLOAD_CONTAINER_NAME}
+    ports:
+      - ${UPLOAD_CONTAINER_PORT}:${UPLOAD_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${UPLOAD_PROFILE}
+      - EXPOSE_PORT=${UPLOAD_APP_PORT}
+    networks:
+      - local-diskie-net
+    depends_on:
+      - configserver
+      - discoveryserver
 
   smsservice:
-    image: public.ecr.aws/y9a7a6m7/sms-service:latest
+    image: terrencedroppa/local-diskie-sms-service:latest
     restart: always
     container_name: ${SMS_CONTAINER_NAME}
     ports:
-      - ${SMS_CONTAINER_PORT}:${SMS_CONTAINER_PORT}
+      - ${SMS_CONTAINER_PORT}:${SMS_APP_PORT}
+    environment:
+      - ACTIVE_PROFILE=${SMS_PROFILE}
+      - EXPOSE_PORT=${SMS_APP_PORT}
     networks:
       - local-diskie-net
     depends_on:
       - configserver
       - discoveryserver
 
-
-  uploadservice:
-    image: public.ecr.aws/y9a7a6m7/upload-service:latest
-    restart: always
-    container_name: ${UPLOAD_CONTAINER_NAME}
-    ports:
-      - ${UPLOAD_CONTAINER_PORT}:${UPLOAD_CONTAINER_PORT}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
-      - discoveryserver
-
-
-  userservice:
-    image: public.ecr.aws/y9a7a6m7/user-service:latest
-    restart: always
-    container_name: ${USER_CONTAINER_NAME}
-    ports:
-      - ${USER_CONTAINER_PORT}:${USER_CONTAINER_PORT}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
-      - discoveryserver
-      - localdiskie
+  # emailservice:
+  #   image: public.ecr.aws/y9a7a6m7/email-service:latest
+  #   restart: always
+  #   container_name: ${EMAIL_CONTAINER_NAME}
+  #   ports:
+  #     - ${EMAIL_CONTAINER_PORT}:${EMAIL_CONTAINER_PORT}
+  #   networks:
+  #     - local-diskie-net
+  #   depends_on:
+  #     - configserver
+  #     - discoveryserver
 
 
-  userReactiveservice:
-    image: public.ecr.aws/y9a7a6m7/user-reactive-service:latest
-    restart: always
-    container_name: ${USER_REACTIVE_CONTAINER_NAME}
-    ports:
-      - ${USER_REACTIVE_CONTAINER_PORT}:${USER_REACTIVE_CONTAINER_PORT}
-    networks:
-      - local-diskie-net
-    depends_on:
-      - configserver
-      - discoveryserver
-      - localdiskie
 
 networks:
   local-diskie-net:
@@ -239,5 +266,8 @@ volumes:
   mongo-data:
     driver: local
   postgress-data:
+  postgress-post-data:
+  postgress-notification-data:
+  postgress-game-data:
 
 #todo add volume
