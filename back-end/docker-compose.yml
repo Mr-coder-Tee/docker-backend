@@ -150,7 +150,7 @@ services:
       - postgressDbGame
 
   livegameservice:
-    image: terrencedroppa/local-diskie-livegame-service:latest
+    image: terrencedroppa/local-diskie-livegame-service:0.0.1
     restart: unless-stopped
     container_name: ${LIVE_CONTAINER_NAME}
     ports:
