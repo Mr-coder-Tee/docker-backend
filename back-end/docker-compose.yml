@@ -183,7 +183,7 @@ services:
       - localdiskie
 
   userReactiveservice:
-    image: terrencedroppa/local-diskie-user-reactive-service:latest
+    image: terrencedroppa/local-diskie-user-reactive-service:0.0.1
     restart: unless-stopped
     container_name: ${USER_REACTIVE_CONTAINER_NAME}
     ports:
