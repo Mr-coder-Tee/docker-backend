@@ -73,9 +73,16 @@ services:
       - postgress-game-data:/var/lib/postgresql/data
     networks:
       -  local-diskie-net
+  zipkinserver:
+    image: openzipkin/zipkin
+    container_name: ${ZIPKIN_CONTAINER_NAME}
+    ports:
+      - ${ZIPKIN_PORTS}:${ZIPKIN_PORTS}
+    networks:
+      - local-diskie-net
 
   configserver:
-    image: terrencedroppa/local-diskie-config-server:latest
+    image: terrencedroppa/local-diskie-config-server:0.0.1
     restart: unless-stopped
     ports:
       - ${CONFIG_CONTAINER_PORT}:${CONFIG_APP_PORT}
@@ -87,9 +94,11 @@ services:
       - local-diskie-net
     depends_on:
       - ${RABIT_MQ_CONTAINER_NAME}
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   discoveryserver:
-    image: terrencedroppa/local-diskie-discovery-server:latest
+    image: terrencedroppa/local-diskie-discovery-server:0.0.1
     restart: unless-stopped
     ports:
       - ${DISCOVER_CONTAINER_PORT}:${DISCOVER_APP_PORT}
@@ -101,9 +110,11 @@ services:
       - local-diskie-net
     depends_on:
       - configserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   gatewayapi:
-    image: terrencedroppa/local-diskie-api-gateway:latest
+    image: terrencedroppa/local-diskie-api-gateway:0.0.2
     restart: unless-stopped
     ports:
       - ${APIGATEWAY_CONTAINER_PORT}:${APIGATEWAY_APP_PORT}
@@ -116,9 +127,11 @@ services:
     depends_on:
       - configserver
       - discoveryserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   postservice:
-    image: terrencedroppa/local-diskie-posts-service:latest
+    image: terrencedroppa/local-diskie-posts-service:0.0.1
     restart: unless-stopped
     container_name: ${POST_CONTAINER_NAME}
     ports:
@@ -132,9 +145,12 @@ services:
       - configserver
       - discoveryserver
       - postgressDb
+      - zipkinserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   gameservice:
-    image: terrencedroppa/local-diskie-games-service:0.0.3
+    image: terrencedroppa/local-diskie-games-service:0.0.4
     restart: unless-stopped
     container_name: ${GAME_CONTAINER_NAME}
     ports:
@@ -148,9 +164,12 @@ services:
       - configserver
       - discoveryserver
       - postgressDbGame
+      - zipkinserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   livegameservice:
-    image: terrencedroppa/local-diskie-livegame-service:0.0.1
+    image: terrencedroppa/local-diskie-livegame-service:0.0.2
     restart: unless-stopped
     container_name: ${LIVE_CONTAINER_NAME}
     ports:
@@ -164,10 +183,13 @@ services:
       - configserver
       - discoveryserver
       - postgressDbNotification
+      - zipkinserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   
   userservice:
-    image: terrencedroppa/local-diskie-user-service:latest
+    image: terrencedroppa/local-diskie-user-service:0.0.1
     restart: unless-stopped
     container_name: ${USER_CONTAINER_NAME}
     ports:
@@ -181,9 +203,12 @@ services:
       - configserver
       - discoveryserver
       - localdiskie
+      - zipkinserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   userReactiveservice:
-    image: terrencedroppa/local-diskie-user-reactive-service:0.0.1
+    image: terrencedroppa/local-diskie-user-reactive-service:0.0.2
     restart: unless-stopped
     container_name: ${USER_REACTIVE_CONTAINER_NAME}
     ports:
@@ -197,9 +222,12 @@ services:
       - configserver
       - discoveryserver
       - localdiskie
+      - zipkinserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   notificationservice:
-    image: terrencedroppa/local-diskie-notification-service:latest
+    image: terrencedroppa/local-diskie-notification-service:0.0.1
     restart: unless-stopped
     container_name: ${NOTIF_CONTAINER_NAME}
     ports:
@@ -213,9 +241,12 @@ services:
       - configserver
       - discoveryserver
       - postgressDbNotification
+      - zipkinserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   uploadservice:
-    image: terrencedroppa/local-diskie-upload-service:latest
+    image: terrencedroppa/local-diskie-upload-service:0.0.1
     restart: unless-stopped
     container_name: ${UPLOAD_CONTAINER_NAME}
     ports:
@@ -228,9 +259,12 @@ services:
     depends_on:
       - configserver
       - discoveryserver
+      - zipkinserver
+    volumes:
+      - local-diskie-data:/local-diskie-data
 
   smsservice:
-    image: terrencedroppa/local-diskie-sms-service:latest
+    image: terrencedroppa/local-diskie-sms-service:0.0.1
     restart: always
     container_name: ${SMS_CONTAINER_NAME}
     ports:
@@ -240,9 +274,12 @@ services:
       - EXPOSE_PORT=${SMS_APP_PORT}
     networks:
       - local-diskie-net
+    volumes:
+      - local-diskie-data:/local-diskie-data
     depends_on:
       - configserver
       - discoveryserver
+      - zipkinserver
 
   # emailservice:
   #   image: public.ecr.aws/y9a7a6m7/email-service:latest
@@ -269,5 +306,7 @@ volumes:
   postgress-post-data:
   postgress-notification-data:
   postgress-game-data:
+  local-diskie-data:
+    external: true
 
 #todo add volume
