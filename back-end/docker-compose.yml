@@ -1,5 +1,20 @@
 version: "5"
 services:
+  
+  pg-admin-dashboard:
+    restart: always
+    image: dpage/pgadmin4:latest
+    container_name: pgadminDashboard
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_PORT: ${PGADMIN_LISTEN_PORT}
+    ports:
+      - ${PG_ADMIN_PORT}:${PG_ADMIN_PORT}
+    volumes:
+      - pg-admin-data:/var/lib/pgadmin
+    networks:
+      -  local-diskie-net
 
   rabbitmq:
     image: rabbitmq:3.12.11-management
@@ -73,6 +88,7 @@ services:
       - postgress-game-data:/var/lib/postgresql/data
     networks:
       -  local-diskie-net
+  
   zipkinserver:
     image: openzipkin/zipkin
     container_name: ${ZIPKIN_CONTAINER_NAME}
@@ -300,6 +316,7 @@ networks:
     external: true
 
 volumes:
+  pg-admin-data:
   mongo-data:
     driver: local
   postgress-data:
